@@ -53,8 +53,8 @@ function mountparts
 function grantnetperms
 {
     echo -e $NETPERMS > $MOUNTPT/$NETPERMSPATH
-    chrootexec root "sh $NETPERMSPATH"
-    chrootexec root "rm $NETPERMSPATH"
+    chrootexec root "/bin/bash ${NETPERMSPATH}"
+    chrootexec root "rm ${NETPERMSPATH}"
     echo "nameserver 8.8.8.8" > $MOUNTPT/etc/resolv.conf
 }
 
@@ -62,7 +62,7 @@ function configureservices
 {
     mkdir -p "${MOUNTPT}/run/dbus" "${MOUNTPT}/var/run/dbus"
     chrootexec root dbus-uuidgen > "${MOUNTPT}/etc/machine-id"
-    chmod 644 "${MOUNTPT}/etc/machine-id"
+    chrootexec root chmod 644 "${MOUNTPT}/etc/machine-id"
 }
 
 function startservices
