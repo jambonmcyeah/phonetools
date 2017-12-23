@@ -8,7 +8,7 @@ NETPERMSPATH="/tmp/netperms.sh"
 #Helpers
 function chrootexec
 {
-    $BINPATH/busybox chroot $MOUNTPT /usr/bin/env -i HOME=/root TERM="$TERM" LANG=$LANG PATH=/bin:/usr/bin:/sbin:/usr/sbin su - $1 -c $2
+    $BINPATH/busybox chroot $MOUNTPT /usr/bin/env -i HOME=/root TERM="$TERM" LANG=$LANG PATH=/bin:/usr/bin:/sbin:/usr/sbin su - $1 -c "$2"
 }
 
 function downloadbin
