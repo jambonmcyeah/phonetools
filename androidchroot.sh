@@ -57,5 +57,15 @@ function chrootshell
     $BINPATH/busybox chroot $MOUNTPT /usr/bin/env -i HOME=/root TERM="$TERM" LANG=$LANG PATH=/bin:/usr/bin:/sbin:/usr/sbin su - root
 }
 
+function unmountparts
+{
+    $BINPATH/busybox umount $MOUNTPT/proc
+    $BINPATH/busybox umount $MOUNTPT/sys
+    $BINPATH/busybox umount $MOUNTPT/dev
+
+    $BINPATH/busybox umount $DISK
+}
+
+
 $1
 
