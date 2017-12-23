@@ -5,6 +5,12 @@ export BINPATH="/data/local/bin"
 NETPERMS="groupadd -g 3001 aid_net_bt_admin\ngroupadd -g 3002 aid_net_bt\ngroupadd -g 3003 aid_inet\ngroupadd -g 3004 aid_inet_raw\ngroupadd -g 3005 aid_inet_admin\n\ngpasswd -a root aid_net_bt_admin\ngpasswd -a root aid_net_bt\ngpasswd -a root aid_inet\ngpasswd -a root aid_inet_raw\ngpasswd -a root aid_inet_admin"
 NETPERMSPATH="/tmp/netperms.sh"
 
+#Helpers
+function chrootexec
+{
+    $BINPATH/busybox chroot $MOUNTPT /usr/bin/env -i HOME=/root TERM="$TERM" LANG=$LANG PATH=/bin:/usr/bin:/sbin:/usr/sbin su - $1 -c $2
+}
+
 function downloadbin
 {
     [ ! -d $MOUNTPT ] && mkdir -p $BINPATH
@@ -47,14 +53,33 @@ function mountparts
 function grantnetperms
 {
     echo -e $NETPERMS > $MOUNTPT/$NETPERMSPATH
-    $BINPATH/busybox chroot $MOUNTPT /usr/bin/env -i HOME=/root TERM="$TERM" LANG=$LANG PATH=/bin:/usr/bin:/sbin:/usr/sbin su - root -c "sh $NETPERMSPATH"
-    $BINPATH/busybox chroot $MOUNTPT /usr/bin/env -i HOME=/root TERM="$TERM" LANG=$LANG PATH=/bin:/usr/bin:/sbin:/usr/sbin su - root -c "rm $NETPERMSPATH"
+    chrootexec root "sh $NETPERMSPATH"
+    chrootexec root "rm $NETPERMSPATH"
     echo "nameserver 8.8.8.8" > $MOUNTPT/etc/resolv.conf
+}
+
+function configureservices
+{
+    mkdir -p "${MOUNTPT}/run/dbus" "${MOUNTPT}/var/run/dbus"
+    chmod 644 "${MOUNTPT}/etc/machine-id"
+    chrootexec root dbus-uuidgen > "${MOUNTPT}/etc/machine-id"
+}
+
+function startservices
+{
+    rm -rf $MOUNTPT/run/dbus/pid $MOUNTPT/run/dbus/messagebus.pid $MOUNTPT/var/run/dbus/pid $MOUNTPT/var/run/dbus/messagebus.pid
+    $BINPATH/busybox nohup chrootexec root "dbus-daemon --system --fork" &
+    disown
+}
+
+function stopservices
+{
+    $BINPATH/busybox kill $(cat $MOUNTPT/run/dbus/pid) $(cat $MOUNTPT/run/dbus/messagebus.pid) $($MOUNTPT/var/run/dbus/pid) $($MOUNTPT/var/run/dbus/messagebus.pid)
 }
 
 function chrootshell
 {
-    $BINPATH/busybox chroot $MOUNTPT /usr/bin/env -i HOME=/root TERM="$TERM" LANG=$LANG PATH=/bin:/usr/bin:/sbin:/usr/sbin su - root
+    chrootexec root "/bin/bash"
 }
 
 function unmountparts
