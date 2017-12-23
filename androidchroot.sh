@@ -100,6 +100,7 @@ function install-opensuse
     makefs
     unziprootfs xjvvf "http://download.opensuse.org/ports/armv7hl/factory/images/openSUSE-Tumbleweed-ARM-X11.armv7-rootfs.armv7l-Current.tbz"
     mountparts
+    grantnetperms
     configureservices
 }
 
