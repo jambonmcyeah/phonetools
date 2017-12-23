@@ -61,8 +61,8 @@ function grantnetperms
 function configureservices
 {
     mkdir -p "${MOUNTPT}/run/dbus" "${MOUNTPT}/var/run/dbus"
-    chmod 644 "${MOUNTPT}/etc/machine-id"
     chrootexec root dbus-uuidgen > "${MOUNTPT}/etc/machine-id"
+    chmod 644 "${MOUNTPT}/etc/machine-id"
 }
 
 function startservices
