@@ -62,7 +62,7 @@ function configureservices
 {
     mkdir -p "${MOUNTPT}/run/dbus" "${MOUNTPT}/var/run/dbus"
     chrootexec root dbus-uuidgen > "${MOUNTPT}/etc/machine-id"
-    chrootexec root "chmod 644 ${MOUNTPT}/etc/machine-id"
+    chrootexec root "chmod 644 /etc/machine-id"
 }
 
 function startservices
