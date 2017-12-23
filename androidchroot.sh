@@ -68,7 +68,7 @@ function configureservices
 function startservices
 {
     rm -rf $MOUNTPT/run/dbus/pid $MOUNTPT/run/dbus/messagebus.pid $MOUNTPT/var/run/dbus/pid $MOUNTPT/var/run/dbus/messagebus.pid
-    $BINPATH/busybox chrootexec root "nohup dbus-daemon --system --fork" &
+    chrootexec root "nohup dbus-daemon --system --fork" &
     disown
 }
 
