@@ -84,9 +84,9 @@ function chrootshell
 
 function unmountparts
 {
-    $BINPATH/busybox umount $MOUNTPT/proc
-    $BINPATH/busybox umount $MOUNTPT/sys
-    $BINPATH/busybox umount $MOUNTPT/dev
+    $BINPATH/busybox umount -lf $MOUNTPT/proc
+    $BINPATH/busybox umount -lf $MOUNTPT/sys
+    $BINPATH/busybox umount -lf $MOUNTPT/dev
 
     $BINPATH/busybox umount $DISK
 }
