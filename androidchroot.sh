@@ -2,16 +2,33 @@ export DISK="/dev/block/mmcblk1p1"
 export MOUNTPT="/data/local/mnt"
 export BINPATH="/data/local/bin"
 
-NETPERMS="groupadd -g 3001 aid_net_bt_admin\ngroupadd -g 3002 aid_net_bt\ngroupadd -g 3003 aid_inet\ngroupadd -g 3004 aid_inet_raw\ngroupadd -g 3005 aid_inet_admin\n\ngpasswd -a root aid_net_bt_admin\ngpasswd -a root aid_net_bt\ngpasswd -a root aid_inet\ngpasswd -a root aid_inet_raw\ngpasswd -a root aid_inet_admin"
+#NETPERMS="groupadd -g 3001 aid_net_bt_admin\ngroupadd -g 3002 aid_net_bt\ngroupadd -g 3003 aid_inet\ngroupadd -g 3004 aid_inet_raw\ngroupadd -g 3005 aid_inet_admin\n\ngpasswd -a root aid_net_bt_admin\ngpasswd -a root aid_net_bt\ngpasswd -a root aid_inet\ngpasswd -a root aid_inet_raw\ngpasswd -a root aid_inet_admin"
 NETPERMSPATH="/tmp/netperms.sh"
 
+netpermsscript()
+{
+    cat <<EOF
+        groupadd -g 3001 aid_net_bt_admin
+        groupadd -g 3002 aid_net_bt
+        groupadd -g 3003 aid_inet
+        groupadd -g 3004 aid_inet_raw
+        groupadd -g 3005 aid_inet_admin
+
+        gpasswd -a $1 aid_net_bt_admin
+        gpasswd -a $1 aid_net_bt
+        gpasswd -a $1 aid_inet
+        gpasswd -a $1 aid_inet_raw
+        gpasswd -a $1 aid_inet_admin
+EOF
+}
+
 #Helpers
-function chrootexec
+chrootexec()
 {
     $BINPATH/busybox chroot $MOUNTPT /usr/bin/env -i HOME=/root TERM="$TERM" LANG=$LANG PATH=/bin:/usr/bin:/sbin:/usr/sbin su - $1 -c "$2"
 }
 
-function downloadbin
+downloadbin()
 {
     [ ! -d $MOUNTPT ] && mkdir -p $BINPATH
     wget https://github.com/jambonmcyeah/phonetools/releases/download/20171212/busybox -P $BINPATH
@@ -20,17 +37,17 @@ function downloadbin
     chmod +x $BINPATH/mke2fs
 }
 
-function makedirs
+makedirs()
 {
     [ ! -d $MOUNTPT ] && $BINPATH/busybox mkdir -p $MOUNTPT
 }
 
-function makefs
+makefs()
 {
     $BINPATH/mke2fs -t ext4 -F $DISK
 }
 
-function unziprootfs
+unziprootfs()
 {
     $BINPATH/busybox mount $DISK $MOUNTPT
     wget $2 -O - > $MOUNTPT/rootfs
@@ -39,7 +56,7 @@ function unziprootfs
 
 }
 
-function mountparts
+mountparts()
 {
     $BINPATH/busybox mount $DISK $MOUNTPT
 
@@ -50,39 +67,39 @@ function mountparts
     $BINPATH/busybox mount --make-rslave $MOUNTPT/dev
 }
 
-function grantnetperms
+grantnetperms()
 {
-    echo -e $NETPERMS > $MOUNTPT/$NETPERMSPATH
+    netpermsscript > $MOUNTPT/$NETPERMSPATH
     chrootexec root "/bin/bash ${NETPERMSPATH}"
     chrootexec root "rm ${NETPERMSPATH}"
     echo "nameserver 8.8.8.8" > $MOUNTPT/etc/resolv.conf
 }
 
-function configureservices
+configureservices()
 {
     mkdir -p "${MOUNTPT}/run/dbus" "${MOUNTPT}/var/run/dbus"
     chrootexec root dbus-uuidgen > "${MOUNTPT}/etc/machine-id"
     chrootexec root "chmod 644 /etc/machine-id"
 }
 
-function startservices
+startservices()
 {
     rm -rf $MOUNTPT/run/dbus/pid $MOUNTPT/run/dbus/messagebus.pid $MOUNTPT/var/run/dbus/pid $MOUNTPT/var/run/dbus/messagebus.pid
     chrootexec root "nohup dbus-daemon --system --fork" &
     disown
 }
 
-function stopservices
+stopservices()
 {
     $BINPATH/busybox kill $(cat $MOUNTPT/run/dbus/pid) $(cat $MOUNTPT/run/dbus/messagebus.pid) $($MOUNTPT/var/run/dbus/pid) $($MOUNTPT/var/run/dbus/messagebus.pid)
 }
 
-function chrootshell
+chrootshell()
 {
     chrootexec root "/bin/bash"
 }
 
-function unmountparts
+unmountparts()
 {
     $BINPATH/busybox umount -lf $MOUNTPT/proc
     $BINPATH/busybox umount -lf $MOUNTPT/sys
@@ -93,7 +110,7 @@ function unmountparts
 
 
 #distros
-function install-opensuse
+install-opensuse()
 {
     downloadbin
     makedirs
@@ -104,8 +121,9 @@ function install-opensuse
     configureservices
 }
 
-function start-opensuse
+start-opensuse()
 {
+    mountparts
     startservices
     chrootshell
 }
