@@ -67,6 +67,7 @@ EOF && return 0;
                     echo "Checksum Passed"
                    else
                     echo "Checksum Failed"
+                    return -1;
                    fi
     cd $MOUNTPT
     $BINPATH/busybox tar $1 $MOUNTPT/rootfs
