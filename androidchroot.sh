@@ -5,6 +5,12 @@ export BINPATH="/data/local/bin"
 #NETPERMS="groupadd -g 3001 aid_net_bt_admin\ngroupadd -g 3002 aid_net_bt\ngroupadd -g 3003 aid_inet\ngroupadd -g 3004 aid_inet_raw\ngroupadd -g 3005 aid_inet_admin\n\ngpasswd -a root aid_net_bt_admin\ngpasswd -a root aid_net_bt\ngpasswd -a root aid_inet\ngpasswd -a root aid_inet_raw\ngpasswd -a root aid_inet_admin"
 NETPERMSPATH="/tmp/netperms.sh"
 
+opnesuse-checksum()
+{
+    echo "Starting Checksum..."
+    [ "$($BINPATH/busybox sha256sum $1 | $BINPATH/busybox cut -d' ' -f1)" == "$(wget -O - $2 | $BINPATH/busybox sed -n 4p | $BINPATH/busybox cut -d' ' -f1)" ]
+}
+
 netpermsscript()
 {
     cat <<EOF
@@ -49,8 +55,19 @@ makefs()
 
 unziprootfs()
 {
+    ([ $1 == "help" ] || [ $# -eq 0 ] ) && cat <<EOF
+    Usage: unziprootfs [TARFLAGS] [ROOFSURL] [CHECKSUM] [CHECKSUMFUNCTION]
+
+EOF && return 0;
+
     $BINPATH/busybox mount $DISK $MOUNTPT
     wget $2 -O - > $MOUNTPT/rootfs
+    [ -z "$3" ] && if $4 $MOUNTPT/rootfs $3
+                   then 
+                    echo "Checksum Passed"
+                   else
+                    echo "Checksum Failed"
+                   fi
     cd $MOUNTPT
     $BINPATH/busybox tar $1 $MOUNTPT/rootfs
 
@@ -69,7 +86,7 @@ mountparts()
 
 grantnetperms()
 {
-    netpermsscript > $MOUNTPT/$NETPERMSPATH
+    netpermsscript root > $MOUNTPT/$NETPERMSPATH
     chrootexec root "/bin/bash ${NETPERMSPATH}"
     chrootexec root "rm ${NETPERMSPATH}"
     echo "nameserver 8.8.8.8" > $MOUNTPT/etc/resolv.conf
@@ -115,7 +132,7 @@ install-opensuse()
     downloadbin
     makedirs
     makefs
-    unziprootfs xjvvf "http://download.opensuse.org/ports/armv7hl/factory/images/openSUSE-Tumbleweed-ARM-X11.armv7-rootfs.armv7l-Current.tbz"
+    unziprootfs xjvvf "http://download.opensuse.org/ports/armv7hl/tumbleweed/images/openSUSE-Tumbleweed-ARM-X11.armv7-rootfs.armv7l-Current.tbz" "http://download.opensuse.org/ports/armv7hl/tumbleweed/images/openSUSE-Tumbleweed-ARM-X11.armv7-rootfs.armv7l-Current.tbz.sha256" opnesuse-checksum
     mountparts
     grantnetperms
     configureservices
