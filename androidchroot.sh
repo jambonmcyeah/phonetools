@@ -55,9 +55,9 @@ makefs()
 
 unziprootfs()
 {
-    ([ $1 == "help" ] || [ $# -eq 0 ] ) && cat <<EOF
-    Usage: unziprootfs [TARFLAGS] [ROOFSURL] [CHECKSUM] [CHECKSUMFUNCTION]
-EOF && return 0;
+    #([ $1 == "help" ] || [ $# -eq 0 ] ) && cat <<EOF
+    #Usage: unziprootfs [TARFLAGS] [ROOFSURL] [CHECKSUM] [CHECKSUMFUNCTION]
+#EOF && return 0;
 
     $BINPATH/busybox mount $DISK $MOUNTPT
     wget $2 -O - > $MOUNTPT/rootfs
